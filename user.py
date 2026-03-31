@@ -1,7 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
-router = APIRouter(prefix="/booking", tags=["Open"])
+from db import get_session
+from crud import create_user
+from models import UserCreate, UserResponse
 
-@router.get("/name")
+router = APIRouter(prefix="/booking", tags=["User"])
+
+
+@router.get("/first")
 async def your_name():
-    return {"Name":"Hii i am user"}
+    return {"Name": "Hii i am user"}
+
+
+@router.post("/users", response_model=UserResponse)
+async def create_new_user(
+    user: UserCreate,
+    session: Session = Depends(get_session)
+):
+    return create_user(session, user)
