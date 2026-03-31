@@ -15,8 +15,6 @@ def create_firm(firm: FirmCreate, session: Session = Depends(get_session)):
 @router1.get("/{firm_id}", response_model=FirmResponse)
 def get_firm(firm_id: int, session: Session = Depends(get_session)):
     firm = session.get(Firm, firm_id)
-
     if not firm:
         return {"error": "Firm not found"}
-
     return firm
