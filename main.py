@@ -20,7 +20,7 @@ async def start():
     return {"msg": "Booking system running"}
 
 
-# ✅ Include routers
+# Include routers
 app.include_router(user_router)
 app.include_router(firm_router)
 app.include_router(router_admin)
