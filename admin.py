@@ -7,8 +7,7 @@ from dependencies import get_current_user
 
 router_admin = APIRouter(prefix="/admin", tags=["Admin"])
 
-
-# Admin check function
+# Admin check function  
 def require_admin(user: User = Depends(get_current_user)):
     if user.role != ["admin"]:
         raise HTTPException(status_code=403, detail="Admin  access required")
@@ -37,7 +36,6 @@ def approve(
         raise HTTPException(status_code=404, detail="Firm not found")
     return firm
 
-
 # Reject firm
 @router_admin.put("/firms/{firm_id}/reject", response_model=FirmResponse)
 def reject(
@@ -49,3 +47,16 @@ def reject(
     if not firm:
         raise HTTPException(status_code=404, detail="Firm not found")
     return firm
+
+@router_admin.post("/make-firm-admin/{user_id}")
+def make_firm_admin(
+    user_id: int,
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    user.role = "firm_admin"
+    session.commit()
+    return {"msg": "User promoted to firm admin"} 

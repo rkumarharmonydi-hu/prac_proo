@@ -7,7 +7,6 @@ from dependencies import get_current_user
 
 router = APIRouter(prefix="/firm", tags=["Firm admin"])
 
-
 # Create firm
 @router.post("/create", response_model=FirmResponse)
 def create_firm(
@@ -15,10 +14,14 @@ def create_firm(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
+    # Optional restriction (only user or firm_admin)
+    if current_user.role not in ["user", "firm_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
     return create_firm_db(session, firm, current_user.id)
 
 
-# Get firm
+# Get firm (ROLE BASED ACCESS)
 @router.get("/{firm_id}", response_model=FirmResponse)
 def get_firm(
     firm_id: int,
@@ -26,11 +29,11 @@ def get_firm(
     session: Session = Depends(get_session)
 ):
     firm = session.get(Firm, firm_id)
-
     if not firm:
         raise HTTPException(status_code=404, detail="Firm not found")
-
+    if current_user.role == "admin":
+        return firm
+    # Firm Admin / User → only own firm
     if firm.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
-
     return firm

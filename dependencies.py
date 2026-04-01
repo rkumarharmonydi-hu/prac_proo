@@ -29,5 +29,14 @@ async def get_current_user(
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    return user   
 
+def require_admin(user:User=Depends(get_current_user)):
+    if user.role!="admin":
+        raise HTTPException(status_code=403, detail="Admin only")
     return user
+
+def require_firm_admin(user:User=Depends(get_current_user)):
+    if user.role not in ["firm_admin","admin"]:
+         raise HTTPException(status_code=403, detail="Firm admin only")
+    return user 
