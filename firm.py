@@ -1,20 +1,36 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from db import get_session
 from crud import create_firm_db
-from models import FirmCreate, FirmResponse, Firm
+from models import FirmCreate, FirmResponse, Firm, User
+from dependencies import get_current_user
 
-router1 = APIRouter(prefix="/firm", tags=["Firm admin"])
-
-
-@router1.post("/create", response_model=FirmResponse)
-def create_firm(firm: FirmCreate, session: Session = Depends(get_session)):
-    return create_firm_db(session, firm)
+router = APIRouter(prefix="/firm", tags=["Firm admin"])
 
 
-@router1.get("/{firm_id}", response_model=FirmResponse)
-def get_firm(firm_id: int, session: Session = Depends(get_session)):
+# Create firm
+@router.post("/create", response_model=FirmResponse)
+def create_firm(
+    firm: FirmCreate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    return create_firm_db(session, firm, current_user.id)
+
+
+# Get firm
+@router.get("/{firm_id}", response_model=FirmResponse)
+def get_firm(
+    firm_id: int,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
     firm = session.get(Firm, firm_id)
+
     if not firm:
-        return {"error": "Firm not found"}
+        raise HTTPException(status_code=404, detail="Firm not found")
+
+    if firm.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     return firm
